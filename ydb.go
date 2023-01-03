@@ -1,14 +1,14 @@
-package postgres
+package ydb
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
 
-	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/stdlib"
+	"github.com/ydb-platform/ydb-go-sdk/v3"
 	"gorm.io/gorm"
 	"gorm.io/gorm/callbacks"
 	"gorm.io/gorm/clause"
@@ -38,7 +38,7 @@ func New(config Config) gorm.Dialector {
 }
 
 func (dialector Dialector) Name() string {
-	return "postgres"
+	return "ydb"
 }
 
 var timeZoneMatcher = regexp.MustCompile("(time_zone|TimeZone)=(.*?)($|&| )")
@@ -58,20 +58,19 @@ func (dialector Dialector) Initialize(db *gorm.DB) (err error) {
 	} else if dialector.DriverName != "" {
 		db.ConnPool, err = sql.Open(dialector.DriverName, dialector.Config.DSN)
 	} else {
-		var config *pgx.ConnConfig
-
-		config, err = pgx.ParseConfig(dialector.Config.DSN)
+		nativeDriver, err := ydb.Open(context.TODO(), "grpcs://localhost:2135/local") // See many ydb.Option's for configure driver https://pkg.go.dev/github.com/ydb-platform/ydb-go-sdk/v3#Option
 		if err != nil {
-			return
+			return err
+			// fallback on error
 		}
-		if dialector.Config.PreferSimpleProtocol {
-			config.DefaultQueryExecMode = pgx.QueryExecModeSimpleProtocol
+		defer nativeDriver.Close(context.TODO())
+		connector, err := ydb.Connector(nativeDriver) // See ydb.ConnectorOption's for configure connector https://pkg.go.dev/github.com/ydb-platform/ydb-go-sdk/v3#ConnectorOption
+		defer connector.Close()
+
+		if err != nil {
+			return err
 		}
-		result := timeZoneMatcher.FindStringSubmatch(dialector.Config.DSN)
-		if len(result) > 2 {
-			config.RuntimeParams["timezone"] = result[2]
-		}
-		db.ConnPool = stdlib.OpenDB(*config)
+		db.ConnPool = sql.OpenDB(connector)
 	}
 	return
 }
