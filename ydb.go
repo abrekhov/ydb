@@ -58,18 +58,17 @@ func (dialector Dialector) Initialize(db *gorm.DB) (err error) {
 	} else if dialector.DriverName != "" {
 		db.ConnPool, err = sql.Open(dialector.DriverName, dialector.Config.DSN)
 	} else {
-		nativeDriver, err := ydb.Open(context.TODO(), "grpcs://localhost:2135/local") // See many ydb.Option's for configure driver https://pkg.go.dev/github.com/ydb-platform/ydb-go-sdk/v3#Option
+		nativeDriver, err := ydb.Open(context.TODO(), dialector.Config.DSN) // See many ydb.Option's for configure driver https://pkg.go.dev/github.com/ydb-platform/ydb-go-sdk/v3#Option
 		if err != nil {
 			return err
 			// fallback on error
 		}
 		defer nativeDriver.Close(context.TODO())
 		connector, err := ydb.Connector(nativeDriver) // See ydb.ConnectorOption's for configure connector https://pkg.go.dev/github.com/ydb-platform/ydb-go-sdk/v3#ConnectorOption
-		defer connector.Close()
-
 		if err != nil {
 			return err
 		}
+		defer connector.Close()
 		db.ConnPool = sql.OpenDB(connector)
 	}
 	return
