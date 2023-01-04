@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -58,7 +59,7 @@ func (dialector Dialector) Initialize(db *gorm.DB) (err error) {
 	} else if dialector.DriverName != "" {
 		db.ConnPool, err = sql.Open(dialector.DriverName, dialector.Config.DSN)
 	} else {
-		nativeDriver, err := ydb.Open(context.TODO(), dialector.Config.DSN) // See many ydb.Option's for configure driver https://pkg.go.dev/github.com/ydb-platform/ydb-go-sdk/v3#Option
+		nativeDriver, err := ydb.Open(context.TODO(), dialector.Config.DSN, ydb.WithAccessTokenCredentials(os.Getenv("YDB_TOKEN"))) // See many ydb.Option's for configure driver https://pkg.go.dev/github.com/ydb-platform/ydb-go-sdk/v3#Option
 		if err != nil {
 			return err
 			// fallback on error
