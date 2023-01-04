@@ -149,7 +149,7 @@ func (dialector Dialector) Explain(sql string, vars ...interface{}) string {
 func (dialector Dialector) DataTypeOf(field *schema.Field) string {
 	switch field.DataType {
 	case schema.Bool:
-		return "boolean"
+		return "Bool"
 	case schema.Int, schema.Uint:
 		size := field.Size
 		if field.DataType == schema.Uint {
@@ -202,18 +202,18 @@ func (dialector Dialector) DataTypeOf(field *schema.Field) string {
 func (dialector Dialector) getSchemaCustomType(field *schema.Field) string {
 	sqlType := string(field.DataType)
 
-	if field.AutoIncrement && !strings.Contains(strings.ToLower(sqlType), "serial") {
+	if field.AutoIncrement && !strings.Contains(strings.ToLower(sqlType), "Int32") {
 		size := field.Size
 		if field.GORMDataType == schema.Uint {
 			size++
 		}
 		switch {
 		case size <= 16:
-			sqlType = "smallserial"
+			sqlType = "Int8"
 		case size <= 32:
-			sqlType = "serial"
+			sqlType = "Int32"
 		default:
-			sqlType = "bigserial"
+			sqlType = "Int64"
 		}
 	}
 
@@ -232,11 +232,11 @@ func (dialector Dialector) RollbackTo(tx *gorm.DB, name string) error {
 
 func getSerialDatabaseType(s string) (dbType string, ok bool) {
 	switch s {
-	case "smallserial":
+	case "Int8":
 		return "smallint", true
-	case "serial":
+	case "Int32":
 		return "integer", true
-	case "bigserial":
+	case "Int64":
 		return "bigint", true
 	default:
 		return "", false
