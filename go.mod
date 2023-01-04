@@ -1,4 +1,4 @@
-module gorm.io/driver/ydb
+module github.com/abrekhov/ydb
 
 go 1.14
 
