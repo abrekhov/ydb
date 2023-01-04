@@ -189,9 +189,9 @@ func (dialector Dialector) DataTypeOf(field *schema.Field) string {
 		return "text"
 	case schema.Time:
 		if field.Precision > 0 {
-			return fmt.Sprintf("timestamptz(%d)", field.Precision)
+			return fmt.Sprintf("Timestamp(%d)", field.Precision)
 		}
-		return "TzTimestamp"
+		return "Timestamp"
 	case schema.Bytes:
 		return "bytea"
 	default:
