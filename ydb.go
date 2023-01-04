@@ -181,19 +181,19 @@ func (dialector Dialector) DataTypeOf(field *schema.Field) string {
 			}
 			return fmt.Sprintf("numeric(%d)", field.Precision)
 		}
-		return "decimal"
+		return "Float"
 	case schema.String:
 		if field.Size > 0 {
 			return fmt.Sprintf("varchar(%d)", field.Size)
 		}
-		return "text"
+		return "String"
 	case schema.Time:
 		if field.Precision > 0 {
 			return fmt.Sprintf("Timestamp(%d)", field.Precision)
 		}
 		return "Timestamp"
 	case schema.Bytes:
-		return "bytea"
+		return "String"
 	default:
 		return dialector.getSchemaCustomType(field)
 	}
